@@ -92,6 +92,11 @@
     background: #1a1510; border: 1px solid #3a3227; color: var(--ink);
     padding: 6px 8px; border-radius: 6px; font-size: 13px; width: 100%;
   }
+  .horse-card select {
+    background: #1a1510; border: 1px solid #3a3227; color: var(--ink);
+    padding: 6px 8px; border-radius: 6px; font-size: 13px; width: 100%;
+    appearance: none;
+  }
   .horse-card label.field-label {
     font-size: 10px; color: var(--muted); display: block; margin-bottom: 3px;
   }
@@ -316,6 +321,44 @@
   let draftHorses = [];  // being edited in the setup panel (not yet saved)
   let trackLength = 40;
 
+  // Curated list of common TikTok gifts with a matching icon. TikTok's gift
+  // catalog varies by region/app-version and changes over time, so this
+  // covers frequently-seen gifts as a convenience -- "Custom" below covers
+  // anything not listed, or a gift TikTok has renamed/added since.
+  const GIFT_CATALOG = [
+    { name: 'Rose',            emoji: '🌹' },
+    { name: 'TikTok',          emoji: '❤️' },
+    { name: 'Heart',           emoji: '💗' },
+    { name: 'Finger Heart',    emoji: '🫰' },
+    { name: 'GG',              emoji: '🎮' },
+    { name: 'Ice Cream Cone',  emoji: '🍦' },
+    { name: 'Doughnut',        emoji: '🍩' },
+    { name: 'Perfume',         emoji: '🧴' },
+    { name: 'Sunglasses',      emoji: '🕶️' },
+    { name: 'Little Crown',    emoji: '👑' },
+    { name: 'Rosa',            emoji: '🌸' },
+    { name: 'Hand Hearts',     emoji: '💞' },
+    { name: 'Corgi',           emoji: '🐕' },
+    { name: 'Mic',             emoji: '🎤' },
+    { name: 'Star',            emoji: '⭐' },
+    { name: 'Sunny',           emoji: '☀️' },
+    { name: 'Confetti',        emoji: '🎊' },
+    { name: 'Diamond Ring',    emoji: '💍' },
+    { name: 'Lion',            emoji: '🦁' },
+    { name: 'Galaxy',          emoji: '🌌' },
+    { name: 'Money Gun',       emoji: '💵' },
+    { name: 'Yacht',           emoji: '🛥️' },
+    { name: 'Drama Queen',     emoji: '🎭' },
+    { name: 'Interstellar',    emoji: '🚀' },
+    { name: 'TikTok Universe', emoji: '🌠' },
+    { name: '__custom__',      emoji: '✏️', label: 'Custom / Other (type it in)' }
+  ];
+
+  function giftIconFor(name) {
+    const match = GIFT_CATALOG.find(g => g.name === name);
+    return match ? match.emoji : '🎁';
+  }
+
   function renderTrack() {
     track.innerHTML = horses.map(h => `
       <div class="lane" id="lane-${h.id}">
@@ -364,10 +407,21 @@
   // ---- Setup panel rendering ----
   function renderSetupPanel() {
     trackLengthInput.value = trackLength;
-    horseCards.innerHTML = draftHorses.map((h, i) => `
+    horseCards.innerHTML = draftHorses.map((h, i) => {
+      const isKnownGift = GIFT_CATALOG.some(g => g.name === h.giftName);
+      const selectValue = isKnownGift ? h.giftName : '__custom__';
+      const showCustomInput = selectValue === '__custom__';
+
+      const options = GIFT_CATALOG.map(g => {
+        const label = g.label || `${g.emoji} ${g.name}`;
+        const selected = g.name === selectValue ? 'selected' : '';
+        return `<option value="${g.name}" ${selected}>${label}</option>`;
+      }).join('');
+
+      return `
       <div class="horse-card" data-index="${i}">
         <div class="icon-preview" title="Click to upload a jpg/png">
-          ${h.image ? `<img src="${h.image}" />` : (h.emoji || '🎁')}
+          ${h.image ? `<img src="${h.image}" />` : '🐎'}
           <input type="file" accept="image/png, image/jpeg" onchange="handleIconUpload(${i}, this)" />
         </div>
         <div>
@@ -375,12 +429,29 @@
           <input type="text" value="${h.name || ''}" onchange="updateDraft(${i}, 'name', this.value)" />
         </div>
         <div>
-          <label class="field-label">Assigned gift (exact TikTok gift name)</label>
-          <input type="text" value="${h.giftName || ''}" onchange="updateDraft(${i}, 'giftName', this.value)" />
+          <label class="field-label">Assigned TikTok gift</label>
+          <select onchange="updateGiftSelection(${i}, this.value)">${options}</select>
+          <input type="text"
+                 style="${showCustomInput ? '' : 'display:none;'} margin-top: 6px;"
+                 placeholder="Type exact TikTok gift name"
+                 value="${showCustomInput ? (h.giftName || '') : ''}"
+                 onchange="updateDraft(${i}, 'giftName', this.value)"
+                 class="custom-gift-input" />
         </div>
         <button class="remove-btn" onclick="removeHorse(${i})" title="Remove horse">✕</button>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
+  }
+
+  function updateGiftSelection(index, value) {
+    if (value === '__custom__') {
+      draftHorses[index].giftName = '';
+      draftHorses[index].emoji = '🎁';
+    } else {
+      draftHorses[index].giftName = value;
+      draftHorses[index].emoji = giftIconFor(value);
+    }
+    renderSetupPanel();
   }
 
   function updateDraft(index, field, value) {
@@ -420,12 +491,18 @@
     const cleaned = draftHorses.map(h => ({
       name: h.name?.trim() || 'Unnamed Horse',
       giftName: h.giftName?.trim() || '',
-      emoji: h.emoji || '🎁',
+      emoji: h.emoji || giftIconFor(h.giftName),
       image: h.image || null,
       flip: true
     }));
     if (cleaned.some(h => !h.giftName)) {
-      alert('Every horse needs a gift name assigned.');
+      alert('Every horse needs a gift assigned — pick one from the list or type a custom gift name.');
+      return;
+    }
+    const giftNames = cleaned.map(h => h.giftName.toLowerCase());
+    const hasDuplicates = new Set(giftNames).size !== giftNames.length;
+    if (hasDuplicates) {
+      alert('Two horses can\'t share the same gift — each horse needs its own unique gift.');
       return;
     }
     socket.emit('updateConfig', {
