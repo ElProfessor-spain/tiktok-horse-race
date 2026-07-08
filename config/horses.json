@@ -1,1 +1,13 @@
-
+{
+  "trackLength": 40,
+  "horses": [
+    { "id": 1, "name": "Rose Runner",     "giftName": "Rose",             "emoji": "🌹", "color": "#e8546b" },
+    { "id": 2, "name": "GG Gallop",       "giftName": "GG",               "emoji": "🎮", "color": "#4c9aff" },
+    { "id": 3, "name": "Sundae Sprinter", "giftName": "Ice Cream Cone",   "emoji": "🍦", "color": "#f5c344" },
+    { "id": 4, "name": "Heartbeat",       "giftName": "Finger Heart",     "emoji": "🫰", "color": "#ff6fa8" },
+    { "id": 5, "name": "Perfume Streak",  "giftName": "Perfume",          "emoji": "🧴", "color": "#9b6bff" },
+    { "id": 6, "name": "Shady Bolt",      "giftName": "Sunglasses",       "emoji": "🕶️", "color": "#3a3a3a" },
+    { "id": 7, "name": "Little Royal",    "giftName": "Little Crown",    "emoji": "👑", "color": "#f2b705" },
+    { "id": 8, "name": "Galaxy Chaser",   "giftName": "Galaxy",           "emoji": "🌌", "color": "#5e60ce" }
+  ]
+}
