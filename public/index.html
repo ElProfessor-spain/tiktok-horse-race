@@ -128,17 +128,21 @@
     transition: left 0.35s cubic-bezier(.2,.9,.3,1.3);
     left: 0; display: flex; align-items: center; justify-content: center;
   }
+  .horse-bounce {
+    position: relative;
+    display: inline-block;
+    animation: gallop 0.45s infinite ease-in-out;
+  }
+  @keyframes gallop {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-3px) rotate(-4deg); }
+  }
   .horse-flip { display: inline-block; }
   .horse-flip.flip { transform: scaleX(-1); }
   .horse-emoji {
     font-size: 28px;
     display: inline-block;
     filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
-    animation: gallop 0.45s infinite ease-in-out;
-  }
-  @keyframes gallop {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50%      { transform: translateY(-3px) rotate(-4deg); }
   }
   .horse-badge {
     position: absolute;
@@ -147,8 +151,8 @@
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid rgba(0,0,0,0.5);
-    /* Sits on the horse's back/body, independent of flip direction so an
-       uploaded photo is never mirrored. */
+    /* Sits on the horse's back/body and never mirrors, but lives inside
+       .horse-bounce so it moves together with the gallop animation. */
     left: 4px;
     top: 14px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.5);
@@ -180,12 +184,86 @@
   details.setup-toggle summary::-webkit-details-marker { display: none; }
   details.setup-toggle summary::before { content: '▶ '; }
   details.setup-toggle[open] summary::before { content: '▼ '; }
+
+  /* ---- Race View (full-screen mode) ----
+     iOS Safari doesn't reliably support the Fullscreen API on arbitrary
+     elements, so instead this uses fixed positioning + layout to fill the
+     entire viewport. Works the same on iPhone, Android, and desktop. */
+  body.race-view {
+    padding: 0;
+    overflow: hidden;
+  }
+  body.race-view h1,
+  body.race-view .subtitle,
+  body.race-view details.setup-toggle,
+  body.race-view .status-bar,
+  body.race-view .debug-panel {
+    display: none;
+  }
+  body.race-view .track {
+    position: fixed;
+    inset: 0;
+    border-radius: 0;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 16px 16px 0;
+    z-index: 500;
+  }
+  body.race-view .lane {
+    flex: 1;
+    height: auto;
+  }
+  body.race-view .lane-label {
+    width: 34vw;
+    font-size: 4.2vw;
+    padding-left: 3vw;
+  }
+  body.race-view .lane-label .gift {
+    font-size: 3vw;
+  }
+  body.race-view .horse-emoji {
+    font-size: 8vw;
+  }
+  body.race-view .horse-badge {
+    width: 4vw;
+    height: 4vw;
+    left: 1vw;
+    top: 4vw;
+  }
+  body.race-view .winner-banner {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 600;
+    font-size: 5vw;
+    text-align: center;
+    max-width: 92vw;
+  }
+  .race-view-toggle {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 700;
+    background: rgba(22, 19, 15, 0.85);
+    color: var(--ink);
+    border: 1px solid #3a3227;
+    border-radius: 100px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
 
   <h1>🏇 Gift Derby</h1>
   <p class="subtitle">Each horse is locked to one TikTok gift. Every gift sent moves that horse forward by the number sent.</p>
+
+  <button class="race-view-toggle" id="raceViewToggle">⛶ Race View</button>
 
   <details class="setup-toggle" id="setupToggle" open>
     <summary>Race Setup</summary>
@@ -245,8 +323,10 @@
         <div class="lane-track">
           <div class="finish-line"></div>
           <div class="horse" id="horse-${h.id}" style="left: 0%;">
-            <span class="horse-flip ${h.flip !== false ? 'flip' : ''}"><span class="horse-emoji">🐎</span></span>
-            ${h.image ? `<img class="horse-badge" src="${h.image}" />` : ''}
+            <div class="horse-bounce">
+              <span class="horse-flip ${h.flip !== false ? 'flip' : ''}"><span class="horse-emoji">🐎</span></span>
+              ${h.image ? `<img class="horse-badge" src="${h.image}" />` : ''}
+            </div>
           </div>
         </div>
       </div>
@@ -394,6 +474,13 @@
 
   document.getElementById('resetBtn').addEventListener('click', () => {
     socket.emit('resetRace');
+  });
+
+  // ---- Race View (full-screen) toggle ----
+  const raceViewToggle = document.getElementById('raceViewToggle');
+  raceViewToggle.addEventListener('click', () => {
+    const isActive = document.body.classList.toggle('race-view');
+    raceViewToggle.textContent = isActive ? '✕ Exit Race View' : '⛶ Race View';
   });
 </script>
 </body>
