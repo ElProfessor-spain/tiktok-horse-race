@@ -128,24 +128,30 @@
     transition: left 0.35s cubic-bezier(.2,.9,.3,1.3);
     left: 0; display: flex; align-items: center; justify-content: center;
   }
+  .horse-flip { display: inline-block; }
+  .horse-flip.flip { transform: scaleX(-1); }
   .horse-emoji {
     font-size: 28px;
     display: inline-block;
     filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
+    animation: gallop 0.45s infinite ease-in-out;
   }
-  .horse-emoji.flip { transform: scaleX(-1); }
+  @keyframes gallop {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-3px) rotate(-4deg); }
+  }
   .horse-badge {
     position: absolute;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--gold);
-    /* Sits roughly on the horse's body/saddle area, independent of flip
-       direction so an uploaded photo is never mirrored. */
-    left: 13px;
-    top: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    border: 1px solid rgba(0,0,0,0.5);
+    /* Sits on the horse's back/body, independent of flip direction so an
+       uploaded photo is never mirrored. */
+    left: 4px;
+    top: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
 
   .winner-banner {
@@ -239,7 +245,7 @@
         <div class="lane-track">
           <div class="finish-line"></div>
           <div class="horse" id="horse-${h.id}" style="left: 0%;">
-            <span class="horse-emoji ${h.flip !== false ? 'flip' : ''}">🐎</span>
+            <span class="horse-flip ${h.flip !== false ? 'flip' : ''}"><span class="horse-emoji">🐎</span></span>
             ${h.image ? `<img class="horse-badge" src="${h.image}" />` : ''}
           </div>
         </div>
