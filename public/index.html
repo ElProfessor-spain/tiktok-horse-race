@@ -177,10 +177,13 @@
      idle, and only appears (via .galloping on the parent) while the
      horse is actively moving from a received gift. Uses a mirrored 💨
      emoji as the puff itself, per request, instead of a plain gradient dot. */
+  /* Anchored at a single fixed point right at the horse's rear (left edge
+     of the bounce box, low on the body, near the legs) so it travels
+     glued to the horse instead of drifting off relative to loose offsets. */
   .dust-cloud {
     position: absolute;
-    left: -0.15em;
-    bottom: 0.05em;
+    left: 0.08em;
+    top: 78%;
     width: 0;
     height: 0;
     opacity: 0;
@@ -191,9 +194,11 @@
   }
   .dust-cloud span {
     position: absolute;
-    font-size: 0.55em;
+    top: 0;
+    left: 0;
+    font-size: 0.5em;
     line-height: 1;
-    transform: scaleX(-1);
+    transform: translate(-50%, -50%) scaleX(-1);
     opacity: 0;
     animation: none;
   }
@@ -204,8 +209,8 @@
   .dust-cloud span:nth-child(2) { animation-delay: 0.27s; }
   .dust-cloud span:nth-child(3) { animation-delay: 0.54s; }
   @keyframes dustPuff {
-    0%   { transform: scaleX(-1) translate(0, 0) scale(0.5); opacity: 0.85; }
-    100% { transform: scaleX(-1) translate(-1.6em, 0.35em) scale(1.5); opacity: 0; }
+    0%   { transform: translate(-50%, -50%) scaleX(-1) scale(0.5); opacity: 0.85; }
+    100% { transform: translate(-220%, -20%) scaleX(-1) scale(1.4); opacity: 0; }
   }
 
   .winner-banner {
