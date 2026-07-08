@@ -136,31 +136,59 @@
   .horse-bounce {
     position: relative;
     display: inline-block;
+    font-size: 52px; /* fallback before JS measures the lane; JS overrides this */
     animation: gallop 0.45s infinite ease-in-out;
   }
   @keyframes gallop {
     0%, 100% { transform: translateY(0) rotate(0deg); }
-    50%      { transform: translateY(-3px) rotate(-4deg); }
+    50%      { transform: translateY(-0.06em) rotate(-4deg); }
   }
   .horse-flip { display: inline-block; }
   .horse-flip.flip { transform: scaleX(-1); }
   .horse-emoji {
-    font-size: 52px;
+    font-size: 1em;
     display: inline-block;
     filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
   }
   .horse-badge {
     position: absolute;
-    width: 24px;
-    height: 24px;
+    width: 0.46em;
+    height: 0.46em;
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid rgba(0,0,0,0.5);
     /* Sits on the horse's back/body and never mirrors, but lives inside
-       .horse-bounce so it moves together with the gallop animation. */
-    left: 7px;
-    top: 24px;
+       .horse-bounce so it moves together with the gallop animation.
+       Sized in em so it scales with the dynamically-set horse size. */
+    left: 0.13em;
+    top: 0.46em;
     box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+
+  /* Dust trail kicked up behind the horse as it runs. Sits before the
+     horse in source order so it paints underneath without needing z-index. */
+  .dust-cloud {
+    position: absolute;
+    left: -0.15em;
+    bottom: 0.05em;
+    width: 0;
+    height: 0;
+  }
+  .dust-cloud span {
+    position: absolute;
+    width: 0.24em;
+    height: 0.24em;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(224,196,150,0.85), rgba(224,196,150,0) 70%);
+    animation: dustPuff 0.8s infinite ease-out;
+    opacity: 0;
+  }
+  .dust-cloud span:nth-child(1) { animation-delay: 0s; }
+  .dust-cloud span:nth-child(2) { animation-delay: 0.27s; }
+  .dust-cloud span:nth-child(3) { animation-delay: 0.54s; }
+  @keyframes dustPuff {
+    0%   { transform: translate(0, 0) scale(0.3); opacity: 0.75; }
+    100% { transform: translate(-1.5em, 0.35em) scale(1.7); opacity: 0; }
   }
 
   .winner-banner {
@@ -227,15 +255,6 @@
   }
   body.race-view .lane-label .gift {
     font-size: 3.4vw;
-  }
-  body.race-view .horse-emoji {
-    font-size: 13vw;
-  }
-  body.race-view .horse-badge {
-    width: 6vw;
-    height: 6vw;
-    left: 2vw;
-    top: 6vw;
   }
   body.race-view .winner-banner {
     position: fixed;
@@ -367,6 +386,7 @@
           <div class="finish-line"></div>
           <div class="horse" id="horse-${h.id}" style="left: 0%;">
             <div class="horse-bounce">
+              <div class="dust-cloud"><span></span><span></span><span></span></div>
               <span class="horse-flip ${h.flip !== false ? 'flip' : ''}"><span class="horse-emoji">🐎</span></span>
               ${h.image ? `<img class="horse-badge" src="${h.image}" />` : ''}
             </div>
@@ -375,7 +395,27 @@
       </div>
     `).join('');
     updateHorsePositions();
+    sizeHorses();
   }
+
+  // Make each horse fill its lane -- sized off the ACTUAL rendered lane
+  // height (not just screen width), so fewer horses = bigger horses instead
+  // of leaving most of the lane empty.
+  function sizeHorses() {
+    document.querySelectorAll('.lane').forEach(lane => {
+      const bounce = lane.querySelector('.horse-bounce');
+      if (!bounce) return;
+      const laneHeight = lane.clientHeight || 84;
+      const laneTrackWidth = lane.querySelector('.lane-track')?.clientWidth || 300;
+      // Cap by lane height (fill most of it) and by a fraction of lane
+      // width (so it never gets comically wide relative to the track).
+      const size = Math.max(28, Math.min(laneHeight * 0.78, laneTrackWidth * 0.22));
+      bounce.style.fontSize = size + 'px';
+    });
+  }
+
+  window.addEventListener('resize', () => sizeHorses());
+  window.addEventListener('orientationchange', () => setTimeout(sizeHorses, 150));
 
   function updateHorsePositions() {
     horses.forEach(h => {
@@ -558,6 +598,8 @@
   raceViewToggle.addEventListener('click', () => {
     const isActive = document.body.classList.toggle('race-view');
     raceViewToggle.textContent = isActive ? '✕ Exit Race View' : '⛶ Race View';
+    // Lanes resize when panels hide/show -- wait a tick for layout to settle.
+    requestAnimationFrame(() => requestAnimationFrame(sizeHorses));
   });
 </script>
 </body>
