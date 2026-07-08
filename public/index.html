@@ -26,176 +26,166 @@
     padding: 24px;
   }
 
-  h1 {
-    font-size: 28px;
-    letter-spacing: 1px;
-    margin: 0 0 4px;
-  }
-  .subtitle {
-    color: var(--muted);
-    margin-bottom: 20px;
-    font-size: 14px;
-  }
+  h1 { font-size: 28px; letter-spacing: 1px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); margin-bottom: 20px; font-size: 14px; }
 
   .status-bar {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
+    display: flex; gap: 12px; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap;
   }
   .status-bar input {
-    background: var(--card);
-    border: 1px solid #3a3227;
-    color: var(--ink);
-    padding: 8px 10px;
-    border-radius: 6px;
+    background: var(--card); border: 1px solid #3a3227; color: var(--ink);
+    padding: 8px 10px; border-radius: 6px;
   }
   button {
-    background: var(--gold);
-    color: #1a1a1a;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
+    background: var(--gold); color: #1a1a1a; border: none;
+    padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer;
   }
-  button.secondary {
-    background: var(--card);
-    color: var(--ink);
-    border: 1px solid #3a3227;
-  }
+  button.secondary { background: var(--card); color: var(--ink); border: 1px solid #3a3227; }
+  button.danger { background: #4a1f1f; color: #ff9a9a; border: 1px solid #6b2b2b; }
   #tiktokStatus {
-    font-size: 13px;
-    padding: 4px 10px;
-    border-radius: 100px;
-    background: #3a1414;
-    color: #ff8a8a;
+    font-size: 13px; padding: 4px 10px; border-radius: 100px;
+    background: #3a1414; color: #ff8a8a;
   }
-  #tiktokStatus.connected {
-    background: #14351a;
-    color: #7be08c;
+  #tiktokStatus.connected { background: #14351a; color: #7be08c; }
+
+  /* ---- Setup panel ---- */
+  .setup-panel {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  .setup-panel p { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+  .track-length-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+  }
+  .track-length-row input {
+    width: 80px; background: #2c2419; border: 1px solid #3a3227;
+    color: var(--ink); padding: 6px 8px; border-radius: 6px;
+  }
+  .horse-cards { display: flex; flex-direction: column; gap: 10px; }
+  .horse-card {
+    display: grid;
+    grid-template-columns: 56px 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+    background: #2c2419;
+    border: 1px solid #3a3227;
+    border-radius: 8px;
+    padding: 10px;
+  }
+  .horse-card .icon-preview {
+    width: 44px; height: 44px; border-radius: 8px;
+    background: #1a1510; display: flex; align-items: center; justify-content: center;
+    font-size: 24px; overflow: hidden; position: relative; cursor: pointer;
+    border: 1px dashed #4a4030;
+  }
+  .horse-card .icon-preview img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .horse-card .icon-preview input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+  .horse-card input[type=text] {
+    background: #1a1510; border: 1px solid #3a3227; color: var(--ink);
+    padding: 6px 8px; border-radius: 6px; font-size: 13px; width: 100%;
+  }
+  .horse-card label.field-label {
+    font-size: 10px; color: var(--muted); display: block; margin-bottom: 3px;
+  }
+  .horse-card .remove-btn {
+    background: none; border: none; color: #c96b6b; font-size: 18px;
+    cursor: pointer; padding: 4px 8px;
+  }
+  .setup-actions {
+    display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;
   }
 
+  /* ---- Track ---- */
   .track {
     background: var(--track-dirt);
     background-image: repeating-linear-gradient(
       90deg, var(--track-dirt) 0, var(--track-dirt) 38px, var(--track-dirt-dark) 38px, var(--track-dirt-dark) 40px
     );
-    border-radius: 10px;
-    padding: 14px 14px 14px 0;
-    position: relative;
-    overflow: hidden;
+    border-radius: 10px; padding: 14px 14px 14px 0; position: relative; overflow: hidden;
   }
-
   .lane {
-    display: flex;
-    align-items: center;
-    height: 52px;
-    position: relative;
+    display: flex; align-items: center; height: 52px; position: relative;
     border-bottom: 1px dashed rgba(255,255,255,0.15);
   }
   .lane:last-child { border-bottom: none; }
-
-  .lane-label {
-    width: 160px;
-    flex-shrink: 0;
-    padding-left: 14px;
-    font-size: 13px;
-    color: var(--rail);
-  }
-  .lane-label .gift {
-    display: block;
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .lane-track {
-    position: relative;
-    flex: 1;
-    height: 100%;
-  }
-
+  .lane-label { width: 160px; flex-shrink: 0; padding-left: 14px; font-size: 13px; color: var(--rail); }
+  .lane-label .gift { display: block; font-size: 11px; color: var(--muted); }
+  .lane-track { position: relative; flex: 1; height: 100%; }
   .finish-line {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 6px;
+    position: absolute; right: 0; top: 0; bottom: 0; width: 6px;
     background: repeating-linear-gradient(45deg, #fff 0 6px, #000 6px 12px);
   }
-
   .horse {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 28px;
-    transition: left 0.35s cubic-bezier(.2,.9,.3,1.3);
-    left: 0;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
+    position: absolute; top: 50%; transform: translateY(-50%);
+    font-size: 28px; transition: left 0.35s cubic-bezier(.2,.9,.3,1.3);
+    left: 0; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
+    display: flex; align-items: center; justify-content: center;
   }
+  /* Default horse emoji faces left -- mirror it so it faces the direction
+     of travel (left -> right). Custom uploaded icons can opt out via
+     data-flip="false" set from server config. */
+  .horse.flip { transform: translateY(-50%) scaleX(-1); }
+  .horse img { width: 32px; height: 32px; object-fit: contain; border-radius: 6px; }
 
   .winner-banner {
-    margin-top: 16px;
-    padding: 14px;
+    margin-top: 16px; padding: 14px;
     background: linear-gradient(90deg, #3a2c05, #221d17);
-    border: 1px solid var(--gold);
-    border-radius: 8px;
-    font-size: 18px;
-    display: none;
+    border: 1px solid var(--gold); border-radius: 8px; font-size: 18px; display: none;
   }
   .winner-banner.show { display: block; }
 
-  .debug-panel {
-    margin-top: 28px;
-    background: var(--card);
-    border-radius: 10px;
-    padding: 16px;
-  }
-  .debug-panel h2 {
-    font-size: 16px;
-    margin: 0 0 4px;
-  }
-  .debug-panel p {
-    color: var(--muted);
-    font-size: 13px;
-    margin: 0 0 14px;
-  }
-  .gift-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+  .debug-panel { margin-top: 28px; background: var(--card); border-radius: 10px; padding: 16px; }
+  .debug-panel p { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+  .gift-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
   .gift-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    background: #2c2419;
-    border: 1px solid #3a3227;
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: var(--ink);
-    cursor: pointer;
-    font-size: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: #2c2419; border: 1px solid #3a3227; border-radius: 8px;
+    padding: 10px 14px; color: var(--ink); cursor: pointer; font-size: 12px;
   }
   .gift-btn:hover { border-color: var(--gold); }
   .gift-btn .emoji { font-size: 22px; }
-  .gift-btn .count-row {
-    display: flex;
-    gap: 4px;
-    margin-top: 4px;
+  .gift-btn .count-row { display: flex; gap: 4px; margin-top: 4px; }
+  .gift-btn .count-row button { font-size: 11px; padding: 3px 7px; }
+
+  details.setup-toggle summary {
+    cursor: pointer; font-weight: bold; padding: 4px 0; list-style: none;
   }
-  .gift-btn .count-row button {
-    font-size: 11px;
-    padding: 3px 7px;
-  }
+  details.setup-toggle summary::-webkit-details-marker { display: none; }
+  details.setup-toggle summary::before { content: '▶ '; }
+  details.setup-toggle[open] summary::before { content: '▼ '; }
 </style>
 </head>
 <body>
 
   <h1>🏇 Gift Derby</h1>
   <p class="subtitle">Each horse is locked to one TikTok gift. Every gift sent moves that horse forward by the number sent.</p>
+
+  <details class="setup-toggle" id="setupToggle" open>
+    <summary>Race Setup</summary>
+    <div class="setup-panel">
+      <p>Set how many horses race, name them, assign the gift each one reacts to, and optionally upload a photo/icon (jpg or png) for each horse so viewers can see exactly what they're racing for. Saving resets the current race.</p>
+
+      <div class="track-length-row">
+        <label>Track length (steps to win):</label>
+        <input type="number" id="trackLengthInput" min="5" max="500" value="40" />
+      </div>
+
+      <div class="horse-cards" id="horseCards"></div>
+
+      <div class="setup-actions">
+        <button class="secondary" id="addHorseBtn">+ Add Horse</button>
+        <button id="saveConfigBtn">Save &amp; Reset Race</button>
+      </div>
+    </div>
+  </details>
 
   <div class="status-bar">
     <input id="tiktokUsername" placeholder="TikTok username (no @)" />
@@ -210,7 +200,7 @@
 
   <div class="debug-panel">
     <h2>🧪 Debug: Simulate Gifts</h2>
-    <p>No live TikTok stream needed — click a gift to test how a horse reacts. Use the +1 / +5 buttons to simulate a combo.</p>
+    <p>No live TikTok stream needed — click a gift to test how a horse reacts. Use the +1 / +5 / +10 buttons to simulate a combo.</p>
     <div class="gift-buttons" id="giftButtons"></div>
   </div>
 
@@ -221,17 +211,23 @@
   const giftButtons = document.getElementById('giftButtons');
   const winnerBanner = document.getElementById('winnerBanner');
   const tiktokStatus = document.getElementById('tiktokStatus');
+  const horseCards = document.getElementById('horseCards');
+  const trackLengthInput = document.getElementById('trackLengthInput');
+  const setupToggle = document.getElementById('setupToggle');
 
-  let horses = [];
+  let horses = [];       // live race state from server (positions etc.)
+  let draftHorses = [];  // being edited in the setup panel (not yet saved)
   let trackLength = 40;
 
   function renderTrack() {
     track.innerHTML = horses.map(h => `
       <div class="lane" id="lane-${h.id}">
-        <div class="lane-label">${h.name}<span class="gift">${h.emoji} ${h.giftName}</span></div>
+        <div class="lane-label">${h.name}<span class="gift">${h.emoji || '🎁'} ${h.giftName}</span></div>
         <div class="lane-track">
           <div class="finish-line"></div>
-          <div class="horse" id="horse-${h.id}" style="left: 0%;">🐎</div>
+          <div class="horse ${h.image ? '' : (h.flip !== false ? 'flip' : '')}" id="horse-${h.id}" style="left: 0%;">
+            ${h.image ? `<img src="${h.image}" style="transform: scaleX(${h.flip !== false ? -1 : 1})" />` : '🐎'}
+          </div>
         </div>
       </div>
     `).join('');
@@ -250,12 +246,12 @@
   function renderDebugButtons() {
     giftButtons.innerHTML = horses.map(h => `
       <div class="gift-btn">
-        <span class="emoji">${h.emoji}</span>
+        <span class="emoji">${h.emoji || '🎁'}</span>
         <span>${h.giftName}</span>
         <div class="count-row">
-          <button onclick="sendDebugGift('${h.giftName}', 1)">+1</button>
-          <button onclick="sendDebugGift('${h.giftName}', 5)">+5</button>
-          <button onclick="sendDebugGift('${h.giftName}', 10)">+10</button>
+          <button onclick="sendDebugGift('${h.giftName.replace(/'/g, "\\'")}', 1)">+1</button>
+          <button onclick="sendDebugGift('${h.giftName.replace(/'/g, "\\'")}', 5)">+5</button>
+          <button onclick="sendDebugGift('${h.giftName.replace(/'/g, "\\'")}', 10)">+10</button>
         </div>
       </div>
     `).join('');
@@ -265,12 +261,89 @@
     socket.emit('debugGift', { giftName, count });
   }
 
+  // ---- Setup panel rendering ----
+  function renderSetupPanel() {
+    trackLengthInput.value = trackLength;
+    horseCards.innerHTML = draftHorses.map((h, i) => `
+      <div class="horse-card" data-index="${i}">
+        <div class="icon-preview" title="Click to upload a jpg/png">
+          ${h.image ? `<img src="${h.image}" />` : (h.emoji || '🎁')}
+          <input type="file" accept="image/png, image/jpeg" onchange="handleIconUpload(${i}, this)" />
+        </div>
+        <div>
+          <label class="field-label">Horse name</label>
+          <input type="text" value="${h.name || ''}" onchange="updateDraft(${i}, 'name', this.value)" />
+        </div>
+        <div>
+          <label class="field-label">Assigned gift (exact TikTok gift name)</label>
+          <input type="text" value="${h.giftName || ''}" onchange="updateDraft(${i}, 'giftName', this.value)" />
+        </div>
+        <button class="remove-btn" onclick="removeHorse(${i})" title="Remove horse">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function updateDraft(index, field, value) {
+    draftHorses[index][field] = value;
+  }
+
+  function handleIconUpload(index, input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Please choose an image under 2MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      draftHorses[index].image = e.target.result;
+      renderSetupPanel();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeHorse(index) {
+    if (draftHorses.length <= 1) {
+      alert('You need at least one horse.');
+      return;
+    }
+    draftHorses.splice(index, 1);
+    renderSetupPanel();
+  }
+
+  document.getElementById('addHorseBtn').addEventListener('click', () => {
+    draftHorses.push({ name: `Horse ${draftHorses.length + 1}`, giftName: '', emoji: '🎁', image: null, flip: true });
+    renderSetupPanel();
+  });
+
+  document.getElementById('saveConfigBtn').addEventListener('click', () => {
+    const cleaned = draftHorses.map(h => ({
+      name: h.name?.trim() || 'Unnamed Horse',
+      giftName: h.giftName?.trim() || '',
+      emoji: h.emoji || '🎁',
+      image: h.image || null,
+      flip: true
+    }));
+    if (cleaned.some(h => !h.giftName)) {
+      alert('Every horse needs a gift name assigned.');
+      return;
+    }
+    socket.emit('updateConfig', {
+      trackLength: parseInt(trackLengthInput.value, 10) || trackLength,
+      horses: cleaned
+    });
+    setupToggle.removeAttribute('open');
+  });
+
+  // ---- Socket events ----
   socket.on('raceReset', data => {
     horses = data.horses;
     trackLength = data.trackLength;
+    draftHorses = data.horses.map(h => ({ ...h }));
     winnerBanner.classList.remove('show');
     renderTrack();
     renderDebugButtons();
+    renderSetupPanel();
   });
 
   socket.on('horseMove', data => {
@@ -280,7 +353,7 @@
   });
 
   socket.on('raceFinished', data => {
-    winnerBanner.textContent = `🏆 ${data.winner.emoji} ${data.winner.name} wins! (Gift: ${data.winner.giftName})`;
+    winnerBanner.textContent = `🏆 ${data.winner.emoji || '🎁'} ${data.winner.name} wins! (Gift: ${data.winner.giftName})`;
     winnerBanner.classList.add('show');
   });
 
