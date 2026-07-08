@@ -9,11 +9,22 @@ import { TikTokLiveConnection, WebcastEvent, SignConfig } from 'tiktok-live-conn
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const CONFIG_PATH = path.join(__dirname, 'config', 'horses.json');
 
 // Read as plain JSON (avoids Node-version-specific import-assertion syntax)
-const horseConfig = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'config', 'horses.json'), 'utf-8')
-);
+function loadConfig() {
+  return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
+}
+
+function saveConfig(config) {
+  try {
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
+  } catch (err) {
+    // On some hosts the filesystem is read-only/ephemeral outside of deploys.
+    // That's fine -- the in-memory config still works for the current server run.
+    console.warn('Could not persist config to disk (this is OK, race still works):', err.message);
+  }
+}
 
 // Optional but recommended: a free Euler Stream API key improves connection
 // reliability. Get one at https://www.eulerstream.com and set EULER_API_KEY.
@@ -23,25 +34,36 @@ if (process.env.EULER_API_KEY) {
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+// Raise the default 1MB socket payload limit since custom horse icons (base64
+// images) can push a single "updateConfig" message over that.
+const io = new Server(server, { maxHttpBufferSize: 10 * 1024 * 1024 });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const TRACK_LENGTH = horseConfig.trackLength;
-let horses = horseConfig.horses.map(h => ({ ...h, position: 0 }));
+// ---- Mutable race config (can be changed live via the Setup panel) ----
+let trackLength;
+let horseDefs; // [{ id, name, giftName, image, flip }]
+let horses;    // horseDefs + live position, used during a race
 let raceActive = true;
 let winner = null;
+
+function applyLoadedConfig(config) {
+  trackLength = config.trackLength;
+  horseDefs = config.horses;
+}
+
+applyLoadedConfig(loadConfig());
 
 // Tracks in-progress combo counts so we only add the *new* portion of a combo,
 // keyed by `${uniqueUserId}-${giftId}`
 const comboTracker = new Map();
 
 function resetRace() {
-  horses = horseConfig.horses.map(h => ({ ...h, position: 0 }));
+  horses = horseDefs.map(h => ({ ...h, position: 0 }));
   raceActive = true;
   winner = null;
   comboTracker.clear();
-  io.emit('raceReset', { horses, trackLength: TRACK_LENGTH });
+  io.emit('raceReset', { horses, trackLength });
 }
 
 function applyGiftToHorse(giftName, stepCount, sender) {
@@ -50,17 +72,17 @@ function applyGiftToHorse(giftName, stepCount, sender) {
   const horse = horses.find(h => h.giftName === giftName);
   if (!horse) return; // gift not assigned to any horse, ignore
 
-  horse.position = Math.min(horse.position + stepCount, TRACK_LENGTH);
+  horse.position = Math.min(horse.position + stepCount, trackLength);
 
   io.emit('horseMove', {
     horseId: horse.id,
     position: horse.position,
-    trackLength: TRACK_LENGTH,
+    trackLength,
     steps: stepCount,
     sender: sender || 'Debug'
   });
 
-  if (horse.position >= TRACK_LENGTH && raceActive) {
+  if (horse.position >= trackLength && raceActive) {
     raceActive = false;
     winner = horse;
     io.emit('raceFinished', { winner: horse });
@@ -118,7 +140,7 @@ function connectToTikTok(username) {
 
 // ---- Socket.IO (browser <-> server) ----
 io.on('connection', socket => {
-  socket.emit('raceReset', { horses, trackLength: TRACK_LENGTH });
+  socket.emit('raceReset', { horses, trackLength });
   if (winner) socket.emit('raceFinished', { winner });
 
   socket.on('resetRace', () => resetRace());
@@ -130,6 +152,30 @@ io.on('connection', socket => {
   // Debug/testing: simulate a gift being sent without a live TikTok stream
   socket.on('debugGift', ({ giftName, count }) => {
     applyGiftToHorse(giftName, count || 1, 'Debug');
+  });
+
+  // Setup panel: update horse count / names / gift assignment / custom icons
+  socket.on('updateConfig', payload => {
+    if (!payload || !Array.isArray(payload.horses) || payload.horses.length === 0) return;
+
+    const cleanHorses = payload.horses.map((h, i) => ({
+      id: i + 1,
+      name: (h.name || `Horse ${i + 1}`).slice(0, 40),
+      giftName: (h.giftName || '').slice(0, 60),
+      emoji: h.emoji || '🎁',
+      image: h.image || null, // base64 data URL or null to fall back to emoji
+      flip: h.flip !== false,
+      color: h.color || '#999999'
+    }));
+
+    const newConfig = {
+      trackLength: Number(payload.trackLength) > 0 ? Number(payload.trackLength) : trackLength,
+      horses: cleanHorses
+    };
+
+    applyLoadedConfig(newConfig);
+    saveConfig(newConfig);
+    resetRace();
   });
 });
 
