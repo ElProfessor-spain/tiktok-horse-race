@@ -64,7 +64,20 @@ TikTok gift names in `horses.json` must match the exact string TikTok's servers 
 
 **Note on Render's free tier:** free web services spin down after inactivity, which will drop the TikTok connection. For a live-streaming tool you'll likely want a paid instance type that stays running for the duration of your stream, or manually hit "Connect" on the page each time you go live.
 
-## Editing horses / gifts
+## Race Setup panel
+
+Open the page and expand **Race Setup** at the top. From there you can, without touching any code:
+
+- **Add or remove horses** — click "+ Add Horse" or the ✕ on any horse card. Any number works (8, 10, 15+).
+- **Rename each horse** and set the **exact TikTok gift name** it reacts to.
+- **Upload a custom icon** (jpg or png, under 2MB) for each horse by clicking its icon box — great for letting viewers see exactly what they're racing for (e.g. their own profile photo, a meme, a logo).
+- Click **Save & Reset Race** to apply changes — this starts a fresh race with the new setup.
+
+This updates every connected viewer/browser in real time and is saved to `config/horses.json` on the server, so it persists across page reloads (note: on Render's free tier the underlying disk is ephemeral, so a full redeploy will reset it back to the file you pushed to GitHub — the setup panel is best used to tweak things during a single deploy/session).
+
+If no custom icon is uploaded, horses just show as a 🐎 emoji, auto-mirrored to face the direction of travel.
+
+
 
 Open `config/horses.json`:
 
