@@ -133,16 +133,24 @@
     transition: left 0.35s cubic-bezier(.2,.9,.3,1.3);
     left: 0; display: flex; align-items: center; justify-content: center;
   }
+
+  /* Idle by default -- no bounce, no dust. The .galloping class (added
+     only while a gift is actively moving the horse) turns both on, and
+     is removed again shortly after the horse settles, per request. */
   .horse-bounce {
     position: relative;
     display: inline-block;
     font-size: 52px; /* fallback before JS measures the lane; JS overrides this */
+    animation: none;
+  }
+  .horse-bounce.galloping {
     animation: gallop 0.45s infinite ease-in-out;
   }
   @keyframes gallop {
     0%, 100% { transform: translateY(0) rotate(0deg); }
     50%      { transform: translateY(-0.06em) rotate(-4deg); }
   }
+
   .horse-flip { display: inline-block; }
   .horse-flip.flip { transform: scaleX(-1); }
   .horse-emoji {
@@ -165,30 +173,39 @@
     box-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
 
-  /* Dust trail kicked up behind the horse as it runs. Sits before the
-     horse in source order so it paints underneath without needing z-index. */
+  /* Dust/smoke trail kicked up behind the horse. Hidden entirely while
+     idle, and only appears (via .galloping on the parent) while the
+     horse is actively moving from a received gift. Uses a mirrored 💨
+     emoji as the puff itself, per request, instead of a plain gradient dot. */
   .dust-cloud {
     position: absolute;
     left: -0.15em;
     bottom: 0.05em;
     width: 0;
     height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .horse-bounce.galloping .dust-cloud {
+    opacity: 1;
   }
   .dust-cloud span {
     position: absolute;
-    width: 0.24em;
-    height: 0.24em;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(224,196,150,0.85), rgba(224,196,150,0) 70%);
-    animation: dustPuff 0.8s infinite ease-out;
+    font-size: 0.55em;
+    line-height: 1;
+    transform: scaleX(-1);
     opacity: 0;
+    animation: none;
+  }
+  .horse-bounce.galloping .dust-cloud span {
+    animation: dustPuff 0.8s infinite ease-out;
   }
   .dust-cloud span:nth-child(1) { animation-delay: 0s; }
   .dust-cloud span:nth-child(2) { animation-delay: 0.27s; }
   .dust-cloud span:nth-child(3) { animation-delay: 0.54s; }
   @keyframes dustPuff {
-    0%   { transform: translate(0, 0) scale(0.3); opacity: 0.75; }
-    100% { transform: translate(-1.5em, 0.35em) scale(1.7); opacity: 0; }
+    0%   { transform: scaleX(-1) translate(0, 0) scale(0.5); opacity: 0.85; }
+    100% { transform: scaleX(-1) translate(-1.6em, 0.35em) scale(1.5); opacity: 0; }
   }
 
   .winner-banner {
@@ -340,6 +357,12 @@
   let draftHorses = [];  // being edited in the setup panel (not yet saved)
   let trackLength = 40;
 
+  // Per-horse timers that remove the "galloping" class (bounce + dust
+  // trail) shortly after a gift-triggered move finishes, so horses go
+  // back to standing still whenever they're not actively advancing.
+  const gallopTimers = {};
+  const GALLOP_SETTLE_MS = 600; // matches the .horse left-transition (0.35s) plus buffer
+
   // Curated list of common TikTok gifts with a matching icon. TikTok's gift
   // catalog varies by region/app-version and changes over time, so this
   // covers frequently-seen gifts as a convenience -- "Custom" below covers
@@ -385,8 +408,8 @@
         <div class="lane-track">
           <div class="finish-line"></div>
           <div class="horse" id="horse-${h.id}" style="left: 0%;">
-            <div class="horse-bounce">
-              <div class="dust-cloud"><span></span><span></span><span></span></div>
+            <div class="horse-bounce" id="bounce-${h.id}">
+              <div class="dust-cloud"><span>💨</span><span>💨</span><span>💨</span></div>
               <span class="horse-flip ${h.flip !== false ? 'flip' : ''}"><span class="horse-emoji">🐎</span></span>
               ${h.image ? `<img class="horse-badge" src="${h.image}" />` : ''}
             </div>
@@ -424,6 +447,20 @@
       const pct = Math.min((h.position / trackLength) * 100, 96);
       el.style.left = pct + '%';
     });
+  }
+
+  // Turns on the gallop animation + dust trail for a horse the moment a
+  // gift moves it, and schedules them to switch back off (idle, no trail)
+  // once the move has finished settling -- reset on every new gift so a
+  // steady stream of gifts keeps the horse galloping continuously.
+  function triggerGallop(horseId) {
+    const bounce = document.getElementById(`bounce-${horseId}`);
+    if (!bounce) return;
+    bounce.classList.add('galloping');
+    clearTimeout(gallopTimers[horseId]);
+    gallopTimers[horseId] = setTimeout(() => {
+      bounce.classList.remove('galloping');
+    }, GALLOP_SETTLE_MS);
   }
 
   function renderDebugButtons() {
@@ -554,6 +591,9 @@
 
   // ---- Socket events ----
   socket.on('raceReset', data => {
+    // Clear any pending gallop timers from the previous race before the
+    // DOM nodes they reference get replaced.
+    Object.keys(gallopTimers).forEach(id => clearTimeout(gallopTimers[id]));
     horses = data.horses;
     trackLength = data.trackLength;
     draftHorses = data.horses.map(h => ({ ...h }));
@@ -567,6 +607,7 @@
     const horse = horses.find(h => h.id === data.horseId);
     if (horse) horse.position = data.position;
     updateHorsePositions();
+    triggerGallop(data.horseId);
   });
 
   socket.on('raceFinished', data => {
