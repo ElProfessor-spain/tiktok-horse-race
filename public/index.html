@@ -59,6 +59,27 @@ button.danger { background: #4a1f1f; color: #ff9a9a; border: 1px solid #6b2b2b; 
 .dust-cloud span:nth-child(2) { animation-delay: 0.27s; }
 .dust-cloud span:nth-child(3) { animation-delay: 0.54s; }
 @keyframes dustPuff { 0% { transform: translate(-50%, -50%) scaleX(-1) scale(0.5); opacity: 0.85; } 100% { transform: translate(-220%, -20%) scaleX(-1) scale(1.4); opacity: 0; } }
+
+/* Winner celebration: replaces the gallop once a horse's nose has fully
+   passed the finish line. A happier, bigger bounce than the gallop, plus
+   a small confetti burst above the horse. Idle (no animation) otherwise. */
+.horse-bounce.celebrating { animation: cheer 0.6s infinite ease-in-out; }
+@keyframes cheer {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30% { transform: translateY(-0.22em) rotate(8deg); }
+  60% { transform: translateY(-0.05em) rotate(-8deg); }
+}
+.confetti-burst { position: absolute; left: 50%; top: -0.05em; width: 0; height: 0; opacity: 0; pointer-events: none; }
+.horse-bounce.celebrating .confetti-burst { opacity: 1; }
+.confetti-burst span { position: absolute; top: 0; left: 0; font-size: 0.42em; line-height: 1; transform: translate(-50%, -50%); opacity: 0; animation: none; }
+.horse-bounce.celebrating .confetti-burst span { animation: confettiPop 1s infinite ease-out; }
+.confetti-burst span:nth-child(1) { animation-delay: 0s; }
+.confetti-burst span:nth-child(2) { animation-delay: 0.33s; }
+.confetti-burst span:nth-child(3) { animation-delay: 0.66s; }
+@keyframes confettiPop {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+  100% { transform: translate(-50%, -220%) scale(1.3); opacity: 0; }
+}
 .winner-banner { margin-top: 16px; padding: 14px; background: linear-gradient(90deg, #3a2c05, #221d17); border: 1px solid var(--gold); border-radius: 8px; font-size: 18px; display: none; }
 .winner-banner.show { display: block; }
 .debug-panel { margin-top: 28px; background: var(--card); border-radius: 10px; padding: 16px; }
@@ -176,6 +197,7 @@ function renderTrack() {
         <div class="horse" id="horse-${h.id}" style="left: 0%;">
           <div class="horse-bounce" id="bounce-${h.id}">
             <div class="dust-cloud"><span>💨</span><span>💨</span><span>💨</span></div>
+            <div class="confetti-burst"><span>🎉</span><span>✨</span><span>🎊</span></div>
             <span class="horse-flip ${h.flip !== false ? 'flip' : ''}"><span class="horse-emoji">🐎</span></span>
             ${h.image ? `<img class="horse-badge" src="${h.image}" />` : ''}
           </div>
@@ -211,6 +233,7 @@ window.addEventListener('orientationchange', () => setTimeout(() => { sizeHorses
 // percentage, so the horse only visually touches the line at exactly 100%.
 function updateHorsePositions() {
   horses.forEach(h => {
+    if (h.finished) return; // already crossed the line + celebrating; leave its position alone
     const el = document.getElementById(`horse-${h.id}`);
     if (!el) return;
 
@@ -226,6 +249,38 @@ function updateHorsePositions() {
     const pctLabel = document.getElementById(`pct-${h.id}`);
     if (pctLabel) pctLabel.textContent = Math.round(rawPct) + '%';
   });
+}
+
+// Called once a horse wins: stops the gallop, slides the horse the rest of
+// the way through and past the finish line (instead of stopping the moment
+// its nose touches it), then switches to an idle cheer/confetti animation.
+// Marked as `finished` so the normal per-gift updateHorsePositions loop
+// leaves it alone afterward.
+function celebrateHorse(horseId) {
+  const el = document.getElementById(`horse-${horseId}`);
+  const bounce = document.getElementById(`bounce-${horseId}`);
+  const horse = horses.find(h => h.id === horseId);
+  if (!el || !bounce) return;
+
+  clearTimeout(gallopTimers[horseId]);
+  bounce.classList.remove('galloping');
+
+  const laneTrack = el.closest('.lane-track');
+  const laneTrackWidth = laneTrack ? laneTrack.clientWidth : 300;
+  const horseWidth = el.offsetWidth || 0;
+  const horseWidthPct = laneTrackWidth ? (horseWidth / laneTrackWidth) * 100 : 0;
+
+  // Push the nose past 100% by roughly its own width so the whole horse
+  // visibly runs through the finish line rather than stopping right at it.
+  el.style.left = (100 + horseWidthPct * 0.6) + '%';
+  if (horse) horse.finished = true;
+
+  // Wait for the "run through" slide to finish before starting the cheer,
+  // so the two animations don't fight each other mid-transition.
+  clearTimeout(gallopTimers[`${horseId}-celebrate`]);
+  gallopTimers[`${horseId}-celebrate`] = setTimeout(() => {
+    bounce.classList.add('celebrating');
+  }, 380);
 }
 
 function triggerGallop(horseId) {
@@ -382,6 +437,9 @@ socket.on('horseMove', data => {
 socket.on('raceFinished', data => {
   winnerBanner.textContent = `🏆 ${data.winner.emoji || '🎁'} ${data.winner.name} wins! (Gift: ${data.winner.giftName})`;
   winnerBanner.classList.add('show');
+  if (data.winner && data.winner.id !== undefined) {
+    celebrateHorse(data.winner.id);
+  }
 });
 
 socket.on('tiktokStatus', data => {
