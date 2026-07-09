@@ -35,7 +35,7 @@ button.danger { background: #4a1f1f; color: #ff9a9a; border: 1px solid #6b2b2b; 
 .horse-card label.field-label { font-size: 10px; color: var(--muted); display: block; margin-bottom: 3px; }
 .horse-card .remove-btn { background: none; border: none; color: #c96b6b; font-size: 18px; cursor: pointer; padding: 4px 8px; }
 .setup-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
-.track { background: var(--track-dirt); background-image: repeating-linear-gradient( 90deg, var(--track-dirt) 0, var(--track-dirt) 38px, var(--track-dirt-dark) 38px, var(--track-dirt-dark) 40px ); border-radius: 10px; padding: 14px 14px 14px 0; position: relative; overflow: hidden; }
+.track { background: var(--track-dirt); background-image: repeating-linear-gradient( 90deg, var(--track-dirt) 0, var(--track-dirt) 38px, var(--track-dirt-dark) 38px, var(--track-dirt-dark) 40px ); border-radius: 10px; padding: 14px 34px 14px 0; position: relative; overflow: hidden; }
 .lane { display: flex; align-items: center; height: 84px; position: relative; border-bottom: 1px dashed rgba(255,255,255,0.15); }
 .lane:last-child { border-bottom: none; }
 .lane-label { width: 160px; flex-shrink: 0; padding-left: 14px; font-size: 15px; color: var(--rail); }
@@ -270,9 +270,13 @@ function celebrateHorse(horseId) {
   const horseWidth = el.offsetWidth || 0;
   const horseWidthPct = laneTrackWidth ? (horseWidth / laneTrackWidth) * 100 : 0;
 
-  // Push the nose past 100% by roughly its own width so the whole horse
-  // visibly runs through the finish line rather than stopping right at it.
-  el.style.left = (100 + horseWidthPct * 0.6) + '%';
+  // Nudge the horse a small, FIXED pixel amount past the finish line (into
+  // the track's right-side padding, which is dirt-colored track surface,
+  // not empty space) so it visibly clears the line but stays fully on
+  // screen -- rather than overshooting by a % of its own width, which
+  // could push it mostly or fully off the visible track.
+  const PAST_LINE_PX = 18;
+  el.style.left = `calc(${Math.max(0, 100 - horseWidthPct)}% + ${PAST_LINE_PX}px)`;
   if (horse) horse.finished = true;
 
   // Wait for the "run through" slide to finish before starting the cheer,
