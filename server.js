@@ -69,11 +69,21 @@ function resetRace() {
   io.emit('raceReset', { horses, trackLength });
 }
 
+function normalizeGiftName(name) {
+  return (name || '').trim().toLowerCase();
+}
+
 function applyGiftToHorse(giftName, stepCount, sender) {
   if (!raceActive || stepCount <= 0) return;
 
-  const horse = horses.find(h => h.giftName === giftName);
-  if (!horse) return; // gift not assigned to any horse, ignore
+  const horse = horses.find(h => normalizeGiftName(h.giftName) === normalizeGiftName(giftName));
+  if (!horse) {
+    // Nothing matched -- log it so you can see the EXACT name TikTok sent
+    // vs. what your horses are configured with (check for typos, different
+    // capitalization, or trailing spaces).
+    console.log(`[gift] No horse assigned to gift "${giftName}". Configured gifts:`, horses.map(h => h.giftName));
+    return;
+  }
 
   horse.position = Math.min(horse.position + stepCount, trackLength);
 
@@ -93,6 +103,11 @@ function applyGiftToHorse(giftName, stepCount, sender) {
 }
 
 function handleGiftEvent(data) {
+  // TEMP DEBUG: prints every incoming gift's raw shape to your hosting
+  // logs (e.g. Render's "Logs" tab) so you can confirm the real field
+  // names/values TikTok is sending. Remove this line once things work.
+  console.log('[gift] raw event:', JSON.stringify(data));
+
   // tiktok-live-api's gift event gives giftName, giftId, repeatCount, and
   // repeatEnd directly on the event (see tik.tools docs), so this stays
   // compatible with the same combo-tracking logic used before.
@@ -138,6 +153,7 @@ function connectToTikTok(username) {
     io.emit('tiktokStatus', { connected: true, username });
   });
 
+  console.log(`[setup] Listening for gifts on @${username}...`);
   tiktokConnection.on('gift', handleGiftEvent);
 
   tiktokConnection.on('disconnected', () => {
