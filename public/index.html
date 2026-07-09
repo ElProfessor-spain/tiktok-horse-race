@@ -97,6 +97,16 @@
     padding: 6px 8px; border-radius: 6px; font-size: 13px; width: 100%;
     appearance: none;
   }
+  .custom-gift-row {
+    display: flex; gap: 6px; margin-top: 6px;
+  }
+  .custom-gift-row .custom-gift-input {
+    flex: 1; min-width: 0;
+  }
+  .custom-gift-row .custom-emoji-input {
+    width: 46px; flex-shrink: 0; text-align: center; font-size: 18px;
+    padding: 4px 2px;
+  }
   .horse-card label.field-label {
     font-size: 10px; color: var(--muted); display: block; margin-bottom: 3px;
   }
@@ -513,12 +523,21 @@
         <div>
           <label class="field-label">Assigned TikTok gift</label>
           <select onchange="updateGiftSelection(${i}, this.value)">${options}</select>
-          <input type="text"
-                 style="${showCustomInput ? '' : 'display:none;'} margin-top: 6px;"
-                 placeholder="Type exact TikTok gift name"
-                 value="${showCustomInput ? (h.giftName || '') : ''}"
-                 onchange="updateDraft(${i}, 'giftName', this.value)"
-                 class="custom-gift-input" />
+          ${showCustomInput ? `
+          <div class="custom-gift-row">
+            <input type="text"
+                   placeholder="Type exact TikTok gift name"
+                   value="${h.giftName || ''}"
+                   onchange="updateDraft(${i}, 'giftName', this.value)"
+                   class="custom-gift-input" />
+            <input type="text"
+                   maxlength="4"
+                   placeholder="🎁"
+                   value="${h.emoji || ''}"
+                   title="Custom emoji for this gift"
+                   onchange="updateDraft(${i}, 'emoji', this.value || '🎁')"
+                   class="custom-emoji-input" />
+          </div>` : ''}
         </div>
         <button class="remove-btn" onclick="removeHorse(${i})" title="Remove horse">✕</button>
       </div>`;
@@ -528,7 +547,9 @@
   function updateGiftSelection(index, value) {
     if (value === '__custom__') {
       draftHorses[index].giftName = '';
-      draftHorses[index].emoji = '🎁';
+      // Keep whatever emoji was already set (if the person had a custom
+      // one going already); only default to the gift box on a fresh horse.
+      draftHorses[index].emoji = draftHorses[index].emoji || '🎁';
     } else {
       draftHorses[index].giftName = value;
       draftHorses[index].emoji = giftIconFor(value);
