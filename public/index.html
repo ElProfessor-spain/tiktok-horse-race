@@ -132,6 +132,14 @@
   }
   .lane:last-child { border-bottom: none; }
   .lane-label { width: 160px; flex-shrink: 0; padding-left: 14px; font-size: 15px; color: var(--rail); }
+  .lane-label .pct {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 0.72em;
+    font-weight: bold;
+    color: var(--gold);
+    vertical-align: middle;
+  }
   .lane-label .gift { display: block; font-size: 12px; color: var(--muted); }
   .lane-track { position: relative; flex: 1; height: 100%; }
   .finish-line {
@@ -419,7 +427,7 @@
   function renderTrack() {
     track.innerHTML = horses.map(h => `
       <div class="lane" id="lane-${h.id}">
-        <div class="lane-label">${h.name}<span class="gift">${h.emoji || '🎁'} ${h.giftName}</span></div>
+        <div class="lane-label">${h.name}<span class="pct" id="pct-${h.id}">0%</span><span class="gift">${h.emoji || '🎁'} ${h.giftName}</span></div>
         <div class="lane-track">
           <div class="finish-line"></div>
           <div class="horse" id="horse-${h.id}" style="left: 0%;">
@@ -459,8 +467,12 @@
     horses.forEach(h => {
       const el = document.getElementById(`horse-${h.id}`);
       if (!el) return;
-      const pct = Math.min((h.position / trackLength) * 100, 96);
+      const rawPct = Math.min((h.position / trackLength) * 100, 100);
+      const pct = Math.min(rawPct, 96);
       el.style.left = pct + '%';
+
+      const pctLabel = document.getElementById(`pct-${h.id}`);
+      if (pctLabel) pctLabel.textContent = Math.round(rawPct) + '%';
     });
   }
 
